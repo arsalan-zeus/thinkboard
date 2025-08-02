@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 
 import notesRoutes from "./routes/notesroutes.js";
+import authRoutes from "./routes/authRoute.js";
 import rateLimiter from "./middleware/rateLimiter.js";
 import { connectDB } from "./config/db.js";
 
@@ -29,7 +30,7 @@ app.use(rateLimiter);
 //   console.log(`Request method is ${req.method} & request URL is ${req.url}`);
 //   next();
 // });
-
+app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
