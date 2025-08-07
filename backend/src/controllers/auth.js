@@ -3,7 +3,7 @@ import bcryptjs from "bcryptjs";
 import crypto from "crypto";
 
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
-import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendResetSuccessEmail } from "../mailtrap/emails.js";
+import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendResetSuccessEmail } from "../smtpGmail/emails.js";
 
 export const signup = async (req, res) => {
   const { email, password, name } = req.body;
@@ -88,20 +88,34 @@ export const verifyEmail = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    // Logic for user login
     const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(404).json({ success: false, message: "Invalid credentials" });
     }
+
     const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Email not verified",
+        requiresVerification: true,
+        userId: user._id,
+      });
+    }
+
     generateTokenAndSetCookie(res, user._id);
+
     user.lastlogin = Date();
     await user.save();
-    res.status(200).json({ 
-      success: true, message: "Login successfully",
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
       user: {
         ...user._doc,
         password: undefined,
@@ -112,6 +126,7 @@ export const login = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
 
 export const logout = async (req, res) => {
   res.clearCookie("token");
