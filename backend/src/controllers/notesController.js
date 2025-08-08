@@ -1,4 +1,5 @@
 import Note from "../models/Note.js";
+import { User } from "../models/user.model.js";
 
 export async function getAllNotes(_, res) {
     try {
@@ -26,8 +27,22 @@ export async function getNoteById(req, res) {
 
 export async function createNote(req, res) {
     try {
-        const { title, content } = req.body;
-        const note = new Note({ title, content });
+        const { title, content, isAnonymous } = req.body;
+        const authorId = req.userId;
+
+        const user = await User.findById(authorId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const note = new Note({
+            title,
+            content,
+            author: authorId,
+            authorName: user.name,
+            isAnonymous: isAnonymous || false,
+        });
+
         const savedNote = await note.save();
         res.status(201).json(savedNote);
     } catch (error) {
