@@ -55,10 +55,20 @@ export async function updateNote(req, res) {
     try {
         const { id } = req.params;
         const { title, content } = req.body;
-        const updatedNote = await Note.findByIdAndUpdate(id, { title, content }, { new: true });
-        if (!updatedNote) {
+        const userId = req.userId;
+
+        const note = await Note.findById(id);
+
+        if (!note) {
             return res.status(404).json({ message: "Note not found" });
         }
+
+        if (note.author.toString() !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this note" });
+        }
+
+        const updatedNote = await Note.findByIdAndUpdate(id, { title, content }, { new: true });
+
         res.status(200).json({ message: "Note updated successfully!", note: updatedNote });
     } catch (error) {
         console.error("Error in updateNote controller:", error);
