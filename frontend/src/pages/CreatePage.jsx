@@ -7,6 +7,7 @@ import api from "../lib/axios";
 const CreatePage = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const CreatePage = () => {
     }
     setLoading(true);
     try {
-      await api.post("/notes", { title, content });
+      await api.post("/notes", { title, content, isAnonymous });
       toast.success("Note created successfully");
       navigate("/");
     } catch (error) {
@@ -71,6 +72,17 @@ const CreatePage = () => {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                   />
+                </div>
+                <div className="form-control mb-4">
+                  <label className="label cursor-pointer">
+                    <span className="label-text">Post as Anonymous</span>
+                    <input
+                      type="checkbox"
+                      className="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                    />
+                  </label>
                 </div>
                 <div className="card-actions justify-end">
                   <button type="submit" className="btn btn-primary" disabled={loading}>
